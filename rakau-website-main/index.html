@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Rākau Indoors: virtual hiking through native New Zealand forest, from home.">
+  <title data-mi="Rākau — Kāinga">Rākau — Home</title>
+  <link rel="stylesheet" href="css/styles.css">
+
+  <!-- Theme, applied before the page paints. Yes, it has to be inline, and yes, it has to be here.
+       Move it to script.js and every page load starts with a white flash. Ask how we know. -->
+  <script>
+    (function () {
+      try {
+        var stored = localStorage.getItem('rakau-theme');
+        var theme = (stored === 'light' || stored === 'dark') ? stored : 'dark';
+        document.documentElement.setAttribute('data-theme', theme);
+      } catch (e) {
+        document.documentElement.setAttribute('data-theme', 'dark');
+      }
+    })();
+  </script>
+</head>
+
+<body class="home-page">
+  <!-- Skip link. Must stay the first thing in <body>. Keyboard users should not have to
+       tab through the whole menu on every page just to read anything. -->
+  <a class="skip-link" href="#main" data-mi="Peke ki te ihirangi">Skip to content</a>
+
+  <!-- Mobile menu overlay. Looks like an empty div. It is not. Don't delete it. -->
+  <div class="nav-overlay" id="nav-overlay"></div>
+
+  <!-- ========== Header / Navigation ========== -->
+  <!-- This header is copy-pasted into every page, because we have no build step and no
+       intention of adding one. Change it here, change it in the other four. All four. -->
+  <header class="site-header" id="site-header">
+    <div class="nav-container">
+      <a href="index.html" class="nav-logo" aria-label="Rākau home" data-mi-aria-label="Kāinga o Rākau">
+        <img src="media/logo.svg" alt="Rākau logo: white pine trees inside a diamond" data-mi-alt="Waitohu o Rākau: he paina mā i roto i tētahi taimana" id="nav-logo-img">
+      </a>
+
+      <!-- Main menu. The active link is highlighted by script.js, which compares these hrefs
+         to the filename. Keep them as bare filenames or it stops working. -->
+      <nav class="site-nav" id="site-nav" aria-label="Primary" data-mi-aria-label="Matua">
+        <ul>
+          <li><a href="index.html" data-mi="Kāinga">Home</a></li>
+          <li><a href="about.html" data-mi="Mō mātou">About</a></li>
+          <li><a href="walks.html" data-mi="Hīkoi">Walks</a></li>
+          <li><a href="gallery.html" data-mi="Whakaahua">Gallery</a></li>
+          <li><a href="contact.html" data-mi="Whakapā mai">Contact</a></li>
+        </ul>
+      </nav>
+
+      <div class="nav-actions">
+        <!-- Preferences: language and day/night, together in one slim capsule. They're the two
+           settings, not pages, so they sit apart from the menu. -->
+        <div class="nav-prefs">
+        <!-- Language toggle: names the OTHER language, in that language ("Māori" while the site
+           is in English, "English" while it's in te reo), like the day/night toggle names what it
+           will do. Remembered across pages. script.js swaps every element with a data-mi
+           translation and marks it lang="mi" so screen readers pronounce it properly. The hidden
+           prefix gives screen readers the whole action: "Switch language to Māori". -->
+        <button type="button" id="lang-toggle" class="lang-toggle"><svg class="globe-icon" viewBox="0 0 16 16" width="14" height="14" aria-hidden="true" focusable="false"><circle cx="8" cy="8" r="6.5"></circle><ellipse cx="8" cy="8" rx="2.75" ry="6.5"></ellipse><path d="M1.5 8 H14.5"></path></svg><span class="visually-hidden"
+            id="lang-toggle-prefix">Switch language to </span><span id="lang-toggle-name" lang="mi">Māori</span></button>
+
+        <!-- Theme toggle. The tree grows leaves by day (light) and loses them by night (dark). Somebody
+           thought this was clever; on reflection, they were right. Labels are set by script.js. -->
+        <button type="button" id="theme-toggle" class="theme-toggle" aria-label="Switch to day" title="Switch to day">
+          <svg class="tree-icon" viewBox="0 0 64 64" width="22" height="22" aria-hidden="true" focusable="false">
+            <path class="ground" d="M18 54 H46"></path>
+            <path class="trunk" d="M32 54 L32 32"></path>
+            <g class="branches">
+              <path d="M32 32 L32 15"></path>
+              <path d="M32 32 L20 19"></path>
+              <path d="M32 32 L44 19"></path>
+            </g>
+            <g class="foliage">
+              <circle class="leaf" cx="20" cy="19" r="8"></circle>
+              <circle class="leaf" cx="44" cy="19" r="8"></circle>
+              <circle class="leaf" cx="32" cy="15" r="10"></circle>
+            </g>
+          </svg>
+        </button>
+        </div>
+
+        <!-- Hamburger. Three empty spans pretending to be an icon. Hidden above 720px. -->
+        <button type="button" id="menu-toggle" class="menu-toggle" aria-expanded="false" aria-controls="site-nav"
+          aria-label="Open menu" data-mi-aria-label="Whakatuwhera i te tahua">
+          <span></span><span></span><span></span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- ========== Main content ========== -->
+  <main id="main" class="page-main">
+    <!-- Hero. Fills the first screen over the photo. Every line with a data-mi has a te reo
+         version; script.js swaps them and marks them lang="mi". -->
+    <section class="home" id="home" aria-labelledby="home-title">
+      <div class="home-content">
+        <p class="home-eyebrow">Rākau Indoors</p>
+        <h1 id="home-title" data-mi="Kia ora tātou!">Hello, everyone!</h1>
+        <p class="home-lede" data-mi="He wheako hīkoi ka hoki mai anō koe.">Providing the hiking experience you come back to.
+        </p>
+        <a href="walks.html" class="btn" data-mi="Kia haere tātou ki te hīkoi!">Let's go hiking!</a>
+        <p class="home-note" data-mi="He pai ake me te oro, kia tino rumaki ai koe ki te hīkoi.">Best with sound on, for the most immersive walk.</p>
+      </div>
+    </section>
+
+    <!-- What it is, in three columns: the A2 brief's strengths and mission in one line each,
+         so it's clear within a glance that this is virtual hiking. The sections from here down
+         have a solid background, so they scroll up over the fixed hero photo. -->
+    <section class="home-section home-features" aria-labelledby="features-title">
+      <h2 id="features-title" class="home-section-title" data-reveal data-mi="He hīkoi, ahakoa kei hea koe.">Hiking, wherever you are.</h2>
+      <ul class="home-feature-list">
+        <li class="home-feature" data-reveal>
+          <svg class="home-feature-icon" viewBox="0 0 32 32" aria-hidden="true" focusable="false"><path d="M16 4 L9 15 H13 L8 23 H24 L19 15 H23 Z" pathLength="1"></path><path d="M16 23 V28" pathLength="1"></path></svg>
+          <h3 data-mi="He ngahere taketake">Real native bush</h3>
+          <p data-mi="I hopukina ki ngā ara tūturu o Aotearoa, ehara i te ataata rawe noa.">Filmed on real New Zealand trails, not stock footage.</p>
+        </li>
+        <li class="home-feature" data-reveal>
+          <svg class="home-feature-icon" viewBox="0 0 32 32" aria-hidden="true" focusable="false"><circle cx="16" cy="16" r="11" pathLength="1"></circle><path d="M13.5 11.5 L21 16 L13.5 20.5 Z" pathLength="1"></path></svg>
+          <h3 data-mi="I tōu ake tere">At your own pace</h3>
+          <p data-mi="Ka neke te ataata i te tere o te hīkoi. Whakatārewahia i te wā e pai ai koe.">Footage moves at walking speed. Pause whenever you like.</p>
+        </li>
+        <li class="home-feature" data-reveal>
+          <svg class="home-feature-icon" viewBox="0 0 32 32" aria-hidden="true" focusable="false"><path d="M5 25 C9 17, 13 15, 16 15 C19 15, 23 17, 27 25" pathLength="1"></path><circle cx="16" cy="8" r="3" pathLength="1"></circle><path d="M5 25 H27" pathLength="1"></path></svg>
+          <h3 data-mi="E wātea ana ki te katoa">Open to everyone</h3>
+          <p data-mi="Kāore he puke, kāore he huarere, kāore he taputapu. Pēhia noa te tākaro.">No hills, no weather, no gear. Just press play.</p>
+        </li>
+      </ul>
+    </section>
+
+    <!-- Featured walk: one big card that leads into the Walks page (the FVPP).
+         STAND-IN IMAGE: a crop of bg2.jpg, like the Walks carousel, until we have a still
+         from the Rākau Loop footage. -->
+    <section class="home-section home-featured" aria-labelledby="featured-title">
+      <div class="home-featured-card" data-reveal>
+        <div class="home-featured-frame">
+          <img src="media/bg2.jpg" class="home-featured-img" loading="lazy"
+            alt="A river winding through native bush toward the mountains"
+            data-mi-alt="He awa e kōpikopiko ana i te ngahere taketake ki ngā maunga">
+        </div>
+        <div class="home-featured-text">
+          <p class="home-kicker" data-mi="Hīkoi matua">Featured walk</p>
+          <h2 id="featured-title">Rākau Loop</h2>
+          <p class="home-featured-meta" data-mi="Te Tai Tokerau · 25 meneti · Māmā">Northland · 25 min · Easy</p>
+          <p data-mi="He ara māmā i te taha o te awa, i raro i te tāuru o te ngahere. He wāhi pai hei tīmata.">An easy riverside loop under the canopy. A good place to start.</p>
+          <a href="walks.html" class="btn-pill" data-mi="Tirohia ngā hīkoi katoa">See all walks</a>
+        </div>
+      </div>
+    </section>
+
+    <!-- Gallery teaser: four of the Waikato photos, linking through to the full gallery.
+         The photos rise in as you scroll (see "Gallery teaser scroll-in" in styles.css). -->
+    <section class="home-section home-gallery" aria-labelledby="gallery-title">
+      <div class="home-gallery-head" data-reveal>
+        <h2 id="gallery-title" class="home-section-title" data-mi="Mai i te ara">From the trail</h2>
+        <a href="gallery.html" class="home-link" data-mi="Tirohia te whārangi whakaahua &rarr;">View the gallery &rarr;</a>
+      </div>
+      <ul class="home-gallery-grid">
+        <li data-reveal><img src="media/gallery/gallery-1.jpg" loading="lazy"
+            alt="Ferns and shrubs crowding a sunlit path through dense native bush"
+            data-mi-alt="He rauaruhe me ngā rākau iti e karapoti ana i tētahi ara whitiwhiti rā i te ngahere taketake"></li>
+        <li data-reveal><img src="media/gallery/gallery-4.jpg" loading="lazy"
+            alt="Looking up a tall trunk into the forest canopy against a blue sky"
+            data-mi-alt="E titiro whakarunga ana i tētahi kahiwi roa ki te tāuru o te ngahere, ki te rangi kahurangi"></li>
+        <li data-reveal><img src="media/gallery/gallery-6.jpg" loading="lazy"
+            alt="Tree fern fronds, one curling brown, beside a trunk with farmland beyond"
+            data-mi-alt="He rau ponga, kotahi e mingo parauri ana, i te taha o tētahi kahiwi, ko ngā pāmu kei tua"></li>
+        <li data-reveal><img src="media/gallery/gallery-8.jpg" loading="lazy"
+            alt="Looking straight up through branches to the canopy and sky"
+            data-mi-alt="E titiro tōtika whakarunga ana i ngā peka ki te tāuru me te rangi"></li>
+      </ul>
+    </section>
+  </main>
+
+  <!-- ========== Footer ========== -->
+  <footer class="site-footer">
+    <div class="footer-inner">
+      <a href="index.html" aria-label="Rākau home" data-mi-aria-label="Kāinga o Rākau">
+        <img src="media/logo.svg" alt="Rākau logo: white pine trees inside a diamond" data-mi-alt="Waitohu o Rākau: he paina mā i roto i tētahi taimana" class="footer-logo">
+      </a>
+
+      <!-- Footer menu. Same links as the header. If they ever disagree, the header is right. -->
+      <nav class="footer-nav" aria-label="Footer" data-mi-aria-label="Raro">
+        <ul>
+          <li><a href="index.html" data-mi="Kāinga">Home</a></li>
+          <li><a href="about.html" data-mi="Mō mātou">About</a></li>
+          <li><a href="walks.html" data-mi="Hīkoi">Walks</a></li>
+          <li><a href="gallery.html" data-mi="Whakaahua">Gallery</a></li>
+          <li><a href="contact.html" data-mi="Whakapā mai">Contact</a></li>
+        </ul>
+      </nav>
+
+      <!-- Social links: our real YouTube, Instagram and Facebook pages. Same on every page. -->
+      <ul class="footer-social">
+        <li>
+          <a href="https://www.youtube.com/@rakauindoors" target="_blank" rel="noopener"
+            aria-label="Rākau on YouTube (opens in a new tab)" data-mi-aria-label="Rākau i YouTube (ka tuwhera ki tētahi ripa hou)">
+            <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" focusable="false">
+              <rect x="2" y="5" width="20" height="14" rx="4"></rect>
+              <path class="fill" d="M10 9 L15 12 L10 15 Z"></path>
+            </svg>
+          </a>
+        </li>
+        <li>
+          <a href="https://www.instagram.com/rakau_indoors/" target="_blank" rel="noopener"
+            aria-label="Rākau on Instagram (opens in a new tab)" data-mi-aria-label="Rākau i Instagram (ka tuwhera ki tētahi ripa hou)">
+            <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" focusable="false">
+              <rect x="3" y="3" width="18" height="18" rx="5"></rect>
+              <circle cx="12" cy="12" r="4"></circle>
+              <circle class="fill" cx="17.5" cy="6.5" r="1"></circle>
+            </svg>
+          </a>
+        </li>
+        <li>
+          <a href="https://www.facebook.com/profile.php?id=61595049165122" target="_blank" rel="noopener"
+            aria-label="Rākau on Facebook (opens in a new tab)" data-mi-aria-label="Rākau i Facebook (ka tuwhera ki tētahi ripa hou)">
+            <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" focusable="false">
+              <path d="M14 8 H17 V4 H14 A4 4 0 0 0 10 8 V11 H7 V15 H10 V21 H14 V15 H17 L18 11 H14 Z"></path>
+            </svg>
+          </a>
+        </li>
+      </ul>
+    </div>
+
+    <div class="footer-bottom">
+      <p>&copy; <span id="year"></span> Rākau &middot; all your base are belong to us</p>
+      <!-- Back to top. Jumps to the header; the smooth scroll comes from the CSS, not magic. -->
+      <a href="#site-header" class="back-to-top" data-mi="Hoki ki runga &uarr;">Back to top &uarr;</a>
+    </div>
+  </footer>
+
+  <script src="js/script.js"></script>
+</body>
+
+</html>

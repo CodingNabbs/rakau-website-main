@@ -1,0 +1,1699 @@
+/*
+ * styles.css
+ *
+ * The one stylesheet for every Rākau page. If it looks wrong anywhere, it
+ * probably looks wrong everywhere, which is at least consistent.
+ *
+ * Light and dark mode are switched by [data-theme] on <html>. See the theme
+ * tokens below, and please use them instead of typing hex codes into random rules.
+ */
+
+/* ---------- Reset ---------- */
+/* Every browser ships with its own idea of how much margin a heading deserves.
+ * We disagree with all of them. */
+*, *::before, *::after { box-sizing: border-box; }
+html, body, h1, h2, h3, h4, p, ul, ol, figure { margin: 0; }
+ul, ol { padding: 0; list-style: none; }
+img { max-width: 100%; display: block; }
+a { color: inherit; text-decoration: none; }
+button { font: inherit; color: inherit; background: none; border: none; cursor: pointer; padding: 0; }
+
+/* Anything given the hidden attribute stays hidden, even if a rule elsewhere sets its
+ * display (the contact form is display: grid, which otherwise beats hidden). */
+[hidden] { display: none !important; }
+.nowrap { white-space: nowrap; }
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* ---------- Theme tokens (grayscale) ---------- */
+/* The site is greyscale. This is not a design statement; the brand colours from the
+ * A2 brief simply haven't arrived yet. When they do, they go here and only here. */
+:root,
+[data-theme="dark"] {
+  --bg: #202020;
+  --text: #f2f1ed;
+  --border: rgba(15, 15, 15, 0.14);
+
+  --nav-bg: #181818;
+  --nav-text: #f2f1ed;
+  --nav-border: rgba(247, 242, 242, 0.1);
+  --nav-glass: rgba(24, 24, 24, 0.82);
+  --logo-filter: none;
+
+  /* Homepage: the background photo is darkened so white text reads on it, in both
+   * themes. The light theme doesn't override these on purpose. */
+  --photo-shade: rgba(0, 0, 0, 0.45);
+  --panel-border: rgba(255, 255, 255, 0.7);
+  --panel-text: #ffffff;
+
+  /* About page boxes, which sit on the plain page background rather than the photo. */
+  --card-bg: rgba(255, 255, 255, 0.03);
+  --card-bg-open: rgba(255, 255, 255, 0.06);
+  --card-border: rgba(255, 255, 255, 0.22);
+  /* The one non-grey colour on the site: form errors, where colour carries meaning. */
+  --danger: #ff6961;
+
+  --footer-bg: #181818;
+  --footer-text: #f2f1ed;
+  --footer-text-muted: rgba(242, 241, 237, 0.55);
+
+  --leaf-opacity: 0;
+  --leaf-scale: 0.25;
+  --leaf-shift: 9px;
+
+  color-scheme: dark;
+}
+
+[data-theme="light"] {
+  --bg: #ffffff;
+  --text: #121212;
+  --border: rgba(0, 0, 0, 0.12);
+
+  --nav-bg: #ffffff;
+  --nav-text: #121212;
+  --nav-border: rgba(0, 0, 0, 0.1);
+  --nav-glass: rgba(255, 255, 255, 0.82);
+  --logo-filter: invert(1);
+  --card-bg: rgba(0, 0, 0, 0.02);
+  --card-bg-open: rgba(0, 0, 0, 0.04);
+  --card-border: rgba(0, 0, 0, 0.16);
+  --danger: #d70015;
+  --footer-bg: #0a0a0a;
+  --footer-text: #f2f1ed;
+  --footer-text-muted: rgba(242, 241, 237, 0.55);
+
+  --leaf-opacity: 1;
+  --leaf-scale: 1;
+  --leaf-shift: 0px;
+  color-scheme: light;
+}
+
+/* ---------- Base ---------- */
+/* Type: San Francisco on Apple devices, Segoe UI Variable on Windows. Headings use the
+ * Display cut, set bold and tightly tracked in sentence case. Both render the macrons in
+ * Rākau and tātou properly. Antialiasing makes light-on-dark text look as crisp as it
+ * does on a Mac. */
+:root {
+  --font-text: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI Variable Text", "Segoe UI", system-ui, sans-serif;
+  --font-display: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI Variable Display", "Segoe UI", system-ui, sans-serif;
+
+  /* Motion. Every transition on the site uses these, so the same kind of thing always
+   * moves the same way. Pick by what the motion is FOR:
+   *   --dur-fast  hover and press feedback: answers you, then gets out of the way
+   *   --dur-base  something changing state: a theme, a menu, a box opening
+   *   --dur-slow  content arriving on the page
+   *   --ease      for things changing in place (smooth start and stop)
+   *   --ease-out  for things arriving (quick off the mark, gentle landing)
+   * The tree toggle's springy leaves and the theme ripple are deliberate exceptions;
+   * they're the site's signature moves and have their own curves. */
+  --dur-fast: 0.2s;
+  --dur-base: 0.35s;
+  --dur-slow: 0.8s;
+  --ease: cubic-bezier(0.4, 0, 0.2, 1);
+  --ease-out: cubic-bezier(0.2, 0.7, 0.2, 1);
+}
+html { scroll-behavior: smooth; }
+body {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  font-family: var(--font-text);
+  background: var(--bg);
+  color: var(--text);
+  line-height: 1.6;
+  letter-spacing: -0.011em;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+  transition: background-color var(--dur-base) var(--ease), color var(--dur-base) var(--ease);
+}
+body { overflow-x: clip; }
+::selection { background: var(--text); color: var(--bg); }
+/* Photo backgrounds. Browsers won't animate one background-image into another, so each
+ * theme's image lives on its own layer and we cross-fade their opacity instead. ::before
+ * is dark, ::after is light. The homepage pins the photo behind the whole page; the About
+ * page only puts it behind its hero (see "About page"), so the content below sits on --bg. */
+body.home-page::before,
+body.home-page::after,
+.about-hero::before,
+.about-hero::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background-position: center calc(50% + 60px);
+  background-size: cover;
+  background-repeat: no-repeat;
+  transition: opacity var(--dur-base) var(--ease);
+}
+body.home-page::before,
+.about-hero::before {
+  background-image:
+    linear-gradient(var(--photo-shade), var(--photo-shade)),
+    url("../media/bg1.jpg");
+  opacity: 1;
+}
+body.home-page::after,
+.about-hero::after {
+  background-image:
+    linear-gradient(var(--photo-shade), var(--photo-shade)),
+    url("../media/bg2.jpg");
+  opacity: 0;
+}
+html[data-theme="light"] body.home-page::before,
+html[data-theme="light"] .about-hero::before { opacity: 0; }
+html[data-theme="light"] body.home-page::after,
+html[data-theme="light"] .about-hero::after { opacity: 1; }
+body.nav-locked { overflow: hidden; }
+
+.skip-link {
+  position: absolute;
+  left: -999px;
+  top: 0;
+  background: var(--text);
+  color: var(--bg);
+  padding: 0.75rem 1.25rem;
+  z-index: 1000;
+}
+.skip-link:focus { left: 1rem; top: 1rem; }
+
+/* ---------- Page body ---------- */
+/* min-height stops the footer floating up to the middle of the screen on pages with
+ * no content, i.e. all of them, currently. */
+.page-main {
+  flex: 1 0 auto;
+  min-height: 55vh;
+}
+
+/* ---------- Header / Nav ---------- */
+.nav-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity var(--dur-base) var(--ease);
+  z-index: 90;
+}
+.nav-overlay.is-open { opacity: 1; pointer-events: auto; }
+
+/* Frosted glass, Apple style: the page shows through, blurred, as it scrolls under.
+ * The glass is on ::before rather than the header itself, because backdrop-filter on
+ * the header would trap the mobile menu (position: fixed) inside it. It's 82% solid:
+ * Chromium leaves the blur out of the theme switch's snapshots, and at this opacity its
+ * absence for those 0.65s is barely visible. */
+.site-header {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  flex-shrink: 0;
+  border-bottom: 1px solid transparent;
+  transition: border-color var(--dur-base) var(--ease);
+}
+/* The hairline only appears once something has scrolled underneath (script.js). */
+.site-header.is-scrolled { border-bottom-color: var(--nav-border); }
+.site-header::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background: var(--nav-glass);
+  -webkit-backdrop-filter: saturate(180%) blur(20px);
+  backdrop-filter: saturate(180%) blur(20px);
+  transition: background-color var(--dur-base) var(--ease);
+}
+
+.nav-container {
+  max-width: 1180px;
+  margin: 0 auto;
+  padding: 0.25rem 1.5rem;
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+}
+
+.nav-logo { flex-shrink: 0; line-height: 0; }
+/* Real size, not a scale() trick: a transform doesn't take up space in the layout, so a
+ * scaled-up logo overlapped whatever sat next to it on small screens. */
+.nav-logo img {
+  height: 60px;
+  width: auto;
+  filter: var(--logo-filter);
+  transition: filter var(--dur-base) var(--ease);
+}
+
+.site-nav { flex: 1; }
+.site-nav ul { display: flex; align-items: center; gap: 2rem; justify-content: center; transform: translateX(8px); }
+/* Each link is a full 44px tall, so it's easy to hit. The active page is underlined
+ * under the word itself (text-decoration), not at the bottom of that 44px box. */
+.site-nav a,
+.footer-nav a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  line-height: 1.2;
+  text-underline-offset: 6px;
+  text-decoration-thickness: 1px;
+  transition: opacity var(--dur-fast) var(--ease);
+}
+.site-nav a { color: var(--nav-text); font-size: 0.825rem; opacity: 0.8; }
+.footer-nav a { font-size: 0.875rem; opacity: 0.7; }
+.site-nav a:hover,
+.site-nav a:focus-visible,
+.footer-nav a:hover,
+.footer-nav a:focus-visible,
+.site-nav a.is-active,
+.footer-nav a.is-active { opacity: 1; }
+.site-nav a.is-active,
+.footer-nav a.is-active { text-decoration-line: underline; }
+
+.nav-actions { display: flex; align-items: center; gap: 0.75rem; flex-shrink: 0; margin-left: auto; }
+
+/* ---------- Preferences capsule (language + day/night) ---------- */
+/* The two settings share one hairline capsule, split by a thin divider, so they read
+ * as controls rather than as more pages in the menu. Each half dims until you point at
+ * it, like the links, and gets a soft fill on hover. */
+.nav-prefs {
+  display: flex;
+  align-items: center;
+  height: 40px;
+  padding: 0 3px;
+  border: 1px solid var(--nav-border);
+  border-radius: 980px;
+}
+
+.lang-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  height: 34px;
+  padding: 0 0.75rem 0 0.65rem;
+  border-radius: 980px;
+  color: var(--nav-text);
+  font-size: 0.8rem;
+  font-weight: 500;
+  line-height: 1;
+  opacity: 0.8;
+  transition: opacity var(--dur-fast) var(--ease), background-color var(--dur-fast) var(--ease);
+}
+.lang-toggle:hover,
+.lang-toggle:focus-visible { opacity: 1; }
+.lang-toggle:hover { background: var(--nav-border); }
+.lang-toggle:focus-visible { outline: 2px solid var(--nav-text); outline-offset: 2px; }
+
+.globe-icon {
+  flex: 0 0 auto;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.3;
+  /* Half a turn per switch (script.js keeps count), so the click visibly does something. */
+  transform: rotate(var(--globe-turn, 0deg));
+  transition: transform var(--dur-slow) var(--ease-out);
+}
+
+/* Narrow screens: the word folds away and the globe stands alone, so the logo, the
+ * capsule and the menu button never collide. The word is hidden visually, not removed,
+ * so screen readers still hear "Switch language to Māori". */
+@media (max-width: 420px) {
+  .lang-toggle { padding: 0 0.6rem; }
+  #lang-toggle-name {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+  }
+}
+
+/* The divider between the two halves. */
+.lang-toggle + .theme-toggle { position: relative; margin-left: 4px; }
+.lang-toggle + .theme-toggle::before {
+  content: "";
+  position: absolute;
+  left: -4px;
+  top: 9px;
+  bottom: 9px;
+  width: 1px;
+  background: var(--nav-border);
+}
+
+/* ---------- Theme toggle (tree, monochrome) ---------- */
+/* No ring: it behaves like the nav links beside it (dimmed until you point at it), with a
+ * soft circle behind it on hover to show the 44px target. */
+.theme-toggle {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0.75;
+  transition: opacity var(--dur-fast) var(--ease), transform var(--dur-fast) var(--ease), background-color var(--dur-fast) var(--ease);
+}
+.theme-toggle .tree-icon { width: 22px; height: 22px; }
+.theme-toggle:hover,
+.theme-toggle:focus-visible { opacity: 1; }
+.theme-toggle:hover { background: var(--nav-border); }
+.theme-toggle:active { transform: scale(0.94); }
+.theme-toggle:focus-visible { outline: 2px solid var(--nav-text); outline-offset: 2px; }
+
+/* Strokes are weighted to match the nav text at 26px: thinner and the bare night-time
+ * tree reads as a stray mark rather than a button. */
+.tree-icon .ground {
+  stroke: var(--nav-text);
+  stroke-width: 3.5;
+  stroke-linecap: round;
+  opacity: 0.5;
+  transition: stroke var(--dur-base) var(--ease);
+}
+.tree-icon .trunk {
+  fill: none;
+  stroke: var(--nav-text);
+  stroke-width: 5;
+  stroke-linecap: round;
+  transition: stroke var(--dur-base) var(--ease);
+}
+.tree-icon .branches path {
+  fill: none;
+  stroke: var(--nav-text);
+  stroke-width: 4;
+  stroke-linecap: round;
+  transition: stroke var(--dur-base) var(--ease);
+}
+.tree-icon .leaf {
+  fill: var(--nav-text);
+  transform-box: fill-box;
+  transform-origin: 50% 50%;
+  opacity: var(--leaf-opacity);
+  transform: scale(var(--leaf-scale)) translateY(var(--leaf-shift));
+  transition: opacity var(--dur-base) var(--ease), transform 0.45s cubic-bezier(0.34, 1.56, 0.64, 1), fill var(--dur-base) var(--ease);
+}
+.foliage .leaf:nth-child(1) { transition-delay: 0.06s; }
+.foliage .leaf:nth-child(2) { transition-delay: 0.1s; }
+.foliage .leaf:nth-child(3) { transition-delay: 0s; }
+
+/* ---------- Mobile menu button ---------- */
+.menu-toggle {
+  display: none;
+  width: 36px;
+  height: 36px;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: 5px;
+  z-index: 210;
+}
+.menu-toggle span {
+  width: 22px;
+  height: 2px;
+  background: var(--nav-text);
+  border-radius: 2px;
+  transition: transform var(--dur-base) var(--ease), opacity var(--dur-base) var(--ease), background-color var(--dur-base) var(--ease);
+}
+.menu-toggle.is-active span:nth-child(1) { transform: translateY(7px) rotate(45deg); }
+.menu-toggle.is-active span:nth-child(2) { opacity: 0; }
+.menu-toggle.is-active span:nth-child(3) { transform: translateY(-7px) rotate(-45deg); }
+
+/* ---------- Homepage hero ---------- */
+/* One centred stack over the shaded photo: eyebrow, headline, one line of copy, button.
+ * Everything is white in both themes; --photo-shade keeps it readable. */
+/* The hero fills the first screen, then fades into the page so the sections below can
+ * scroll up over the fixed photo without a hard edge. */
+.home {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  min-height: calc(100svh - 68px);
+}
+.home::after {
+  content: "";
+  position: absolute;
+  inset: auto 0 0;
+  height: 10rem;
+  background: linear-gradient(transparent, var(--bg));
+  pointer-events: none;
+}
+
+.home-page .page-main {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.home-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1.25rem;
+  width: min(900px, 100%);
+  margin: auto;
+  padding: 6rem 1.5rem;
+  text-align: center;
+  color: var(--panel-text);
+}
+
+/* Apple's pattern: the product name small and quiet, then the big statement under it. */
+.home-eyebrow {
+  font-size: clamp(1.25rem, 2.4vw, 1.6rem);
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  opacity: 0.85;
+}
+/* The brand name breathes: a slow, soft glow, like light through the canopy. */
+.home-content > .home-eyebrow {
+  animation:
+    hero-in var(--dur-slow) var(--ease-out) both,
+    eyebrow-glow 4s ease-in-out var(--dur-slow) infinite alternate;
+}
+@keyframes eyebrow-glow {
+  from { text-shadow: 0 0 0 rgba(255, 255, 255, 0); }
+  to { text-shadow: 0 0 12px rgba(255, 255, 255, 0.55), 0 0 32px rgba(255, 255, 255, 0.25); }
+}
+
+.home-content h1 {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: clamp(3rem, 9vw, 6.5rem);
+  line-height: 1.02;
+  letter-spacing: -0.04em;
+  text-shadow: 0 2px 24px rgba(0, 0, 0, 0.35);
+}
+
+.home-lede {
+  max-width: 44rem;
+  font-size: clamp(1.15rem, 2.4vw, 1.5rem);
+  font-weight: 500;
+  letter-spacing: -0.015em;
+  opacity: 0.9;
+  text-wrap: balance;
+}
+
+/* Solid white pill: the one thing on the page you're meant to press, so it's the one
+ * solid shape on the page. Hover just eases it back a touch. */
+.home-content .btn {
+  margin-top: 1rem;
+  padding: 0.85rem 1.9rem;
+  border-radius: 980px;
+  background: var(--panel-text);
+  color: #121212;
+  font-size: 1.05rem;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  transition: background-color var(--dur-fast) var(--ease), transform var(--dur-fast) var(--ease);
+}
+.home-content .btn:hover { background: rgba(255, 255, 255, 0.85); }
+.home-content .btn:active { transform: scale(0.97); }
+.home-content .btn:focus-visible { outline: 2px solid var(--panel-text); outline-offset: 4px; }
+
+/* Entrance: each line fades up in turn. Reduced motion (bottom of file) makes it instant. */
+.home-content > * { animation: hero-in var(--dur-slow) var(--ease-out) both; }
+.home-content > :nth-child(2) { animation-delay: 0.1s; }
+.home-content > :nth-child(3) { animation-delay: 0.2s; }
+.home-content > :nth-child(4) { animation-delay: 0.3s; }
+.home-content > :nth-child(5) { animation-delay: 0.4s; }
+.home-content > :nth-child(6) { animation-delay: 0.5s; }
+
+/* The A2 wireframe's "Best with sound on", plus a confession. */
+.home-note {
+  margin-top: -0.25rem;
+  font-size: 0.9rem;
+  opacity: 0.7;
+}
+
+@keyframes hero-in {
+  from { opacity: 0; transform: translateY(16px); }
+  to { opacity: 1; transform: none; }
+}
+
+/* ---------- Homepage life ---------- */
+/* Small, slow movements that make the homepage feel like a place, not a poster:
+ *   - the hero photo drifts in and out very slowly (30s each way)
+ *   - the hero's words lift and fade as you scroll away, handing over to the content
+ *   - the three icons draw themselves in, like a pen sketching a trail map
+ *   - the featured walk's photo eases out from a slight zoom as it scrolls in
+ *   - gallery photos zoom a touch inside their frames when you point at them
+ * The scroll-linked ones need scroll-driven animations (not in Firefox yet), which simply
+ * leaves them still there. Everything here is off for reduced motion. */
+@media (prefers-reduced-motion: no-preference) {
+  body.home-page::before,
+  body.home-page::after {
+    animation: hero-drift 30s ease-in-out infinite alternate;
+  }
+
+  @supports (animation-timeline: scroll()) {
+    .home-content {
+      animation: hero-handover linear both;
+      animation-timeline: scroll();
+      animation-range: 0 70vh;
+    }
+    .home-featured-img {
+      animation: featured-settle linear both;
+      animation-timeline: view();
+      animation-range: entry 0% cover 50%;
+    }
+  }
+
+  .home-gallery-grid li { overflow: hidden; border-radius: 14px; }
+  .home-gallery-grid img { transition: transform var(--dur-slow) var(--ease-out); }
+  .home-gallery-grid li:hover img { transform: scale(1.05); }
+}
+
+@keyframes hero-drift {
+  from { transform: scale(1); }
+  to { transform: scale(1.06); }
+}
+@keyframes hero-handover {
+  to { opacity: 0; transform: translateY(-48px); }
+}
+@keyframes featured-settle {
+  from { transform: scale(1.1); }
+  to { transform: scale(1); }
+}
+
+/* Icon draw-in: each stroke is pathLength 1 in the HTML, so a dash of length 1 offset
+ * by 1 hides it, and an offset of 0 shows it all. Runs once, when the column is revealed. */
+@media (scripting: enabled) and (prefers-reduced-motion: no-preference) {
+  .home-feature-icon * {
+    stroke-dasharray: 1;
+    stroke-dashoffset: 1;
+    transition: stroke-dashoffset 1.4s var(--ease-out) 0.25s;
+  }
+  .home-feature.is-revealed .home-feature-icon * { stroke-dashoffset: 0; }
+}
+
+/* ---------- Homepage sections ---------- */
+/* Below the hero: what it is (three columns), a featured walk, and a gallery teaser.
+ * Solid --bg, so they cover the fixed photo as they scroll up over it. */
+.home-section {
+  position: relative;
+  padding: 5rem 1.5rem;
+  background: var(--bg);
+  color: var(--text);
+}
+.home-section > * {
+  max-width: 76rem;
+  margin-inline: auto;
+}
+.home-features { padding-top: 2rem; }
+
+.home-section-title {
+  font-family: var(--font-display);
+  font-size: clamp(2rem, 5vw, 3.25rem);
+  font-weight: 700;
+  line-height: 1.05;
+  letter-spacing: -0.035em;
+}
+.home-features .home-section-title { text-align: center; }
+
+/* Three columns: icon, title, one line. Stacked on phones. */
+.home-feature-list {
+  display: grid;
+  gap: 2.5rem;
+  margin-top: 3rem;
+}
+@media (min-width: 760px) {
+  .home-feature-list { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 2rem; }
+  .home-feature:nth-child(2) { transition-delay: 0.1s; }
+  .home-feature:nth-child(3) { transition-delay: 0.2s; }
+}
+.home-feature { text-align: center; }
+.home-feature-icon {
+  width: 36px;
+  height: 36px;
+  margin: 0 auto 1rem;
+  fill: none;
+  stroke: var(--text);
+  stroke-width: 1.6;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.home-feature h3 {
+  font-size: 1.2rem;
+  font-weight: 600;
+  letter-spacing: -0.015em;
+}
+.home-feature p {
+  max-width: 20rem;
+  margin: 0.35rem auto 0;
+  color: color-mix(in srgb, var(--text) 70%, transparent);
+}
+
+/* Featured walk: picture and words side by side; stacked on phones. */
+.home-featured-card {
+  display: grid;
+  gap: 2rem;
+  align-items: center;
+}
+@media (min-width: 760px) {
+  .home-featured-card { grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr); gap: 3.5rem; }
+}
+.home-featured-frame {
+  overflow: hidden;
+  border-radius: 18px;
+}
+.home-featured-img {
+  width: 100%;
+  aspect-ratio: 16 / 10;
+  object-fit: cover;
+  object-position: 50% 60%;
+}
+.home-kicker {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: color-mix(in srgb, var(--text) 55%, transparent);
+}
+.home-featured-text h2 {
+  margin-top: 0.25rem;
+  font-family: var(--font-display);
+  font-size: clamp(2.25rem, 5vw, 3.5rem);
+  font-weight: 700;
+  line-height: 1.02;
+  letter-spacing: -0.04em;
+}
+.home-featured-meta {
+  margin-top: 0.4rem;
+  color: color-mix(in srgb, var(--text) 60%, transparent);
+}
+.home-featured-text p:not(.home-kicker):not(.home-featured-meta) {
+  margin-top: 1rem;
+  max-width: 26rem;
+  font-size: 1.1rem;
+  color: color-mix(in srgb, var(--text) 80%, transparent);
+}
+.home-featured-text .btn-pill { margin-top: 1.75rem; }
+
+/* Gallery teaser: four portrait photos and a link through. Two across on phones. */
+.home-gallery-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.5rem 1.5rem;
+}
+.home-link {
+  font-weight: 600;
+  text-underline-offset: 5px;
+  text-decoration-thickness: 1px;
+}
+.home-link:hover,
+.home-link:focus-visible { text-decoration-line: underline; }
+.home-link:focus-visible { outline: 2px solid var(--text); outline-offset: 4px; border-radius: 4px; }
+.home-gallery-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.75rem;
+  margin-top: 2rem;
+}
+@media (min-width: 760px) {
+  .home-gallery-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 1rem; }
+}
+.home-gallery-grid img {
+  width: 100%;
+  aspect-ratio: 3 / 4;
+  object-fit: cover;
+  border-radius: 14px;
+}
+
+/* Gallery teaser scroll-in. The photos rise into place as you scroll, tied to the scroll
+ * itself (scrolling back up reverses it). Each column starts a little lower than the one
+ * before (--rise), so they settle in a gentle wave from left to right.
+ *
+ * Browsers without scroll-driven animations (Firefox, for now) get the ordinary data-reveal
+ * fade-up instead, staggered the same way. Reduced motion: they just appear. */
+.home-gallery-grid li { --rise: 48px; }
+.home-gallery-grid li:nth-child(even) { --rise: 96px; }
+.home-gallery-grid li:nth-child(2) { transition-delay: 0.08s; }
+.home-gallery-grid li:nth-child(3) { transition-delay: 0.16s; }
+.home-gallery-grid li:nth-child(4) { transition-delay: 0.24s; }
+@media (min-width: 760px) {
+  .home-gallery-grid li:nth-child(1) { --rise: 40px; }
+  .home-gallery-grid li:nth-child(2) { --rise: 80px; }
+  .home-gallery-grid li:nth-child(3) { --rise: 120px; }
+  .home-gallery-grid li:nth-child(4) { --rise: 160px; }
+}
+
+@supports (animation-timeline: view()) {
+  @media (prefers-reduced-motion: no-preference) {
+    .home-gallery-grid li {
+      animation: gallery-rise linear both;
+      animation-timeline: view();
+      animation-range: entry 0% cover 45%;
+    }
+  }
+}
+@keyframes gallery-rise {
+  from { opacity: 0; transform: translateY(var(--rise)) scale(0.96); }
+  to { opacity: 1; transform: none; }
+}
+
+/* ---------- About page ---------- */
+/* The hero fills the first screen with the photo behind it (white text in both themes,
+ * like the homepage). The sections underneath are ordinary page content on --bg, so they
+ * follow the theme. They're native <details>; script.js only adds the animation. */
+.about-hero {
+  position: relative;
+  isolation: isolate;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1.5rem;
+  min-height: calc(100svh - 5rem);
+  padding: 4rem 1.5rem;
+  font-family: var(--font-text);
+  text-align: center;
+  color: var(--panel-text);
+}
+/* The photo layers are set up with the homepage's under "Photo backgrounds"; here they
+ * just stay inside the hero instead of pinning to the window. */
+.about-hero::before,
+.about-hero::after {
+  position: absolute;
+  background-position: center;
+  /* Fade the bottom of the photo out, so the hero melts into the section below. */
+  -webkit-mask-image: linear-gradient(to bottom, #000 70%, transparent);
+  mask-image: linear-gradient(to bottom, #000 70%, transparent);
+}
+/* About has its own pair: Taranaki under the Milky Way by night, at golden hour by day.
+ * These are web-sized copies (bg3.jpg itself is 7MB, far too heavy to load here). The
+ * peak sits a little above centre, so the headline lands on the mountain's shoulders. */
+.about-hero::before {
+  background-image:
+    linear-gradient(var(--photo-shade), var(--photo-shade)),
+    url("../media/bg4-web.jpg");
+  background-position: center 35%;
+}
+.about-hero::after {
+  background-image:
+    linear-gradient(var(--photo-shade), var(--photo-shade)),
+    url("../media/bg3-web.jpg");
+  background-position: center 35%;
+}
+
+.about-hero h1 {
+  max-width: 50rem;
+  font-family: var(--font-display);
+  font-size: clamp(2.75rem, 7.5vw, 6rem);
+  font-weight: 700;
+  line-height: 1.02;
+  letter-spacing: -0.04em;
+  text-wrap: balance;
+  text-shadow: 0 2px 24px rgba(0, 0, 0, 0.35);
+}
+
+.about-lede {
+  max-width: 38rem;
+  font-size: clamp(1.15rem, 2.4vw, 1.5rem);
+  font-weight: 500;
+  letter-spacing: -0.015em;
+  opacity: 0.9;
+  text-wrap: balance;
+}
+
+/* Same entrance as the homepage hero. */
+.about-hero > * { animation: hero-in var(--dur-slow) var(--ease-out) both; }
+.about-hero > :nth-child(2) { animation-delay: 0.1s; }
+.about-hero > :nth-child(3) { animation-delay: 0.2s; }
+
+/* "Read more" cue at the bottom of the hero. The arrow stays still until you point at
+ * it, then nudges down to show where the link goes. An always-bobbing arrow just nags. */
+.about-scroll {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.25rem;
+  margin-top: 1.5rem;
+  font-size: 1.1rem;
+  font-weight: 500;
+  opacity: 0.8;
+  transition: opacity var(--dur-fast) var(--ease);
+}
+.about-scroll:hover,
+.about-scroll:focus-visible { opacity: 1; }
+.about-scroll:focus-visible { outline: 2px solid var(--panel-text); outline-offset: 6px; }
+.about-scroll span { display: block; font-size: 1.25rem; transition: transform var(--dur-fast) var(--ease); }
+.about-scroll:hover span,
+.about-scroll:focus-visible span { transform: translateY(4px); }
+
+/* The content section. Faint topographic contour lines sit behind it: the SVG is used
+ * as a mask over a --text-coloured layer, so the lines follow the theme without needing
+ * a second copy of the file.
+ *
+ * The line layer is a fixed 56rem tall, NOT the height of the section. Sized to the
+ * section, it rescaled (and the browser redrew the whole SVG) on every frame of a box
+ * opening, which made the lines swim and the animation stutter. overflow: clip trims it
+ * on short screens; it's clip rather than hidden because hidden would break the sticky intro. */
+.about-body {
+  position: relative;
+  isolation: isolate;
+  overflow: clip;
+  padding: 5rem 1.5rem 6rem;
+  font-family: var(--font-text);
+  color: var(--text);
+  scroll-margin-top: 4rem;
+}
+.about-body::before {
+  content: "";
+  position: absolute;
+  inset: 0 0 auto;
+  height: 56rem;
+  z-index: -1;
+  background: var(--text);
+  opacity: 0.07;
+  /* Second mask layer fades the lines out at the top and bottom edges. */
+  -webkit-mask:
+    url("../media/contours.svg") center / cover no-repeat,
+    linear-gradient(transparent, #000 15%, #000 85%, transparent);
+  -webkit-mask-composite: source-in;
+  mask:
+    url("../media/contours.svg") center / cover no-repeat,
+    linear-gradient(transparent, #000 15%, #000 85%, transparent);
+  mask-composite: intersect;
+  pointer-events: none;
+}
+/* The lines are a fixed height, so their own fade can't know where the section ends.
+ * This sits over them and fades them into --bg at the section's actual bottom edge. */
+.about-body::after {
+  content: "";
+  position: absolute;
+  inset: auto 0 0;
+  height: 10rem;
+  z-index: -1;
+  background: linear-gradient(transparent, var(--bg));
+  pointer-events: none;
+}
+
+.about-body-inner {
+  display: grid;
+  gap: 2.5rem;
+  width: min(72rem, 100%);
+  margin: 0 auto;
+}
+
+.about-intro {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+  text-align: center;
+}
+
+.about-intro h2 {
+  font-family: var(--font-display);
+  font-size: clamp(2.25rem, 5vw, 3.5rem);
+  font-weight: 700;
+  line-height: 1.05;
+  letter-spacing: -0.035em;
+}
+
+.about-intro p {
+  max-width: 24rem;
+  font-family: var(--font-text);
+  font-size: clamp(1rem, 2vw, 1.15rem);
+  opacity: 0.65;
+}
+
+/* Wide screens: intro on the left, held in place while the boxes scroll past. */
+@media (min-width: 900px) {
+  .about-body-inner {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1.7fr);
+    gap: 4rem;
+    align-items: start;
+  }
+  .about-intro {
+    position: sticky;
+    top: 7rem;
+    align-items: flex-start;
+    text-align: left;
+  }
+}
+
+.about-sections {
+  display: grid;
+  gap: 1.25rem;
+}
+
+.about-section-item {
+  border: 1px solid var(--card-border);
+  border-radius: 18px;
+  background: var(--card-bg);
+  transition: border-color var(--dur-fast) var(--ease), background-color var(--dur-base) var(--ease);
+}
+.about-section-item:hover { border-color: color-mix(in srgb, var(--text) 45%, transparent); }
+.about-section-item[open] { background: var(--card-bg-open); }
+
+.about-section-item summary {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1.25rem 1.5rem;
+  font-family: var(--font-text);
+  font-size: clamp(1.15rem, 2.6vw, 1.4rem);
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  line-height: 1.35;
+  list-style: none;
+  cursor: pointer;
+}
+.about-section-item summary::-webkit-details-marker { display: none; }
+
+.about-section-item summary:focus-visible { outline: 2px solid var(--text); outline-offset: 4px; border-radius: 8px; }
+
+/* Chevron: points down when closed, up when open. .is-closing flips it back as soon as
+ * you click, rather than waiting for the close animation to finish. */
+.about-section-item summary::after {
+  content: "";
+  margin-left: auto;
+  flex: 0 0 0.65rem;
+  height: 0.65rem;
+  border-top: 2px solid currentColor;
+  border-left: 2px solid currentColor;
+  transform: rotate(225deg);
+  transition: transform var(--dur-base) var(--ease);
+}
+.about-section-item[open]:not(.is-closing) summary::after { transform: rotate(45deg); }
+
+/* The wrapper is what script.js animates, so it carries no padding or border of its own. */
+.about-section-body { overflow: hidden; }
+
+.about-section-body p {
+  margin: 0 1.5rem;
+  padding: 1.1rem 0 1.4rem;
+  border-top: 1px solid var(--card-border);
+  font-family: var(--font-text);
+  font-size: clamp(1rem, 2vw, 1.1rem);
+  line-height: 1.65;
+  /* Softened with color-mix, not opacity: script.js animates the opacity. */
+  color: color-mix(in srgb, var(--text) 80%, transparent);
+}
+/* Greentext, for the About page's 2011-flavoured honesty box. Classic imageboard green,
+ * nudged lighter at night so it stays readable on the dark background. */
+.about-section-body .greentext { color: #789922; }
+[data-theme="dark"] .about-section-body .greentext { color: #9cbf3a; }
+
+/* Follow-on paragraphs sit under the first, without a second divider. */
+.about-section-body p + p {
+  padding-top: 0;
+  border-top: 0;
+}
+
+/* ---------- "Coming soon" tag ---------- */
+/* A small hairline pill for things that are promised but not built yet. Honest, quiet,
+ * and easy to delete once the real thing lands. */
+.page-soon {
+  display: inline-block;
+  padding: 0.35rem 0.9rem;
+  border: 1px solid var(--card-border);
+  border-radius: 980px;
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: color-mix(in srgb, var(--text) 65%, transparent);
+}
+
+/* ---------- Pill button ---------- */
+/* The primary action anywhere off the homepage: solid, in the text colour, so it inverts
+ * with the theme. One per screen, at most. */
+.btn-pill {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 44px;
+  padding: 0.75rem 1.75rem;
+  border-radius: 980px;
+  background: var(--text);
+  color: var(--bg);
+  font-size: 1rem;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  transition: opacity var(--dur-fast) var(--ease), transform var(--dur-fast) var(--ease);
+}
+.btn-pill:hover { opacity: 0.85; }
+.btn-pill:active { transform: scale(0.97); }
+.btn-pill:focus-visible { outline: 2px solid var(--text); outline-offset: 3px; }
+
+/* ---------- Scroll reveal ---------- */
+/* Sections marked data-reveal fade up as they come into view (script.js adds .is-revealed).
+ * Only when scripting is on, so nothing is ever stuck invisible without JS. Reduced motion
+ * makes it instant via the rule at the bottom of the file. */
+@media (scripting: enabled) {
+  [data-reveal] {
+    opacity: 0;
+    transform: translateY(24px);
+    transition: opacity var(--dur-slow) var(--ease-out), transform var(--dur-slow) var(--ease-out);
+  }
+  [data-reveal].is-revealed { opacity: 1; transform: none; }
+}
+
+/* ---------- About: how a walk works ---------- */
+/* The A2 Overview: image, text, image, with the text widest so it reads first. In the
+ * markup the text comes first (that's the reading order); grid areas put it in the middle.
+ * Phones: text, then the two images side by side. */
+.about-how { padding: 6rem 1.5rem 4rem; }
+
+.about-how-inner {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  grid-template-areas:
+    "text text"
+    "canopy river";
+  gap: 1.25rem;
+  width: min(76rem, 100%);
+  margin: 0 auto;
+}
+.about-how-text { grid-area: text; margin-bottom: 1.5rem; }
+.about-how-img--canopy { grid-area: canopy; }
+.about-how-img--river { grid-area: river; }
+
+@media (min-width: 900px) {
+  .about-how-inner {
+    grid-template-columns: 1fr 1.6fr 1fr;
+    grid-template-areas: "canopy text river";
+    gap: 3rem;
+    align-items: center;
+  }
+  .about-how-text { margin-bottom: 0; }
+  /* The images arrive just after the text, left then right. */
+  .about-how-img--canopy { transition-delay: 0.1s; }
+  .about-how-img--river { transition-delay: 0.2s; }
+}
+
+.about-how-img {
+  width: 100%;
+  aspect-ratio: 3 / 4;
+  object-fit: cover;
+  border-radius: 18px;
+}
+/* Stand-in crops of bg2.jpg; see the comment in about.html. */
+.about-how-img--canopy { object-position: 100% 40%; }
+.about-how-img--river { object-position: 22% 100%; }
+
+.about-how-text h2 {
+  font-family: var(--font-display);
+  font-size: clamp(2.25rem, 5vw, 3.5rem);
+  font-weight: 700;
+  line-height: 1.05;
+  letter-spacing: -0.035em;
+}
+
+.about-how-lede {
+  margin-top: 0.75rem;
+  font-size: clamp(1.05rem, 2vw, 1.2rem);
+  color: color-mix(in srgb, var(--text) 65%, transparent);
+}
+
+/* The three steps. Numbered because they genuinely happen in this order. */
+.steps {
+  display: grid;
+  gap: 0.75rem;
+  margin: 2rem 0 1.25rem;
+}
+.steps li {
+  display: flex;
+  gap: 1.1rem;
+  padding: 1.1rem 1.25rem;
+  border: 1px solid var(--card-border);
+  border-radius: 14px;
+  background: var(--card-bg);
+}
+.step-num {
+  flex: 0 0 auto;
+  padding-top: 0.2rem;
+  font-size: 0.8rem;
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+  color: color-mix(in srgb, var(--text) 50%, transparent);
+}
+.steps h3 {
+  font-size: 1.1rem;
+  font-weight: 600;
+  letter-spacing: -0.015em;
+}
+.steps p {
+  margin-top: 0.15rem;
+  font-size: 0.95rem;
+  color: color-mix(in srgb, var(--text) 70%, transparent);
+}
+
+.about-how-note {
+  margin-bottom: 1.75rem;
+  font-size: 0.9rem;
+  color: color-mix(in srgb, var(--text) 55%, transparent);
+}
+
+/* ---------- Showcase: Walks and Gallery ---------- */
+/* The A2 carousel, used on both pages: walks on one, photos on the other. script.js
+ * positions every item (centre largest, neighbours smaller and dimmer either side) by
+ * setting --x, --s and --o on each <li>; the CSS just draws it. */
+.showcase {
+  width: min(76rem, 100%);
+  margin: 0 auto;
+  padding: 4rem 1.5rem 5rem;
+}
+
+.showcase-head {
+  margin-bottom: 2.5rem;
+  text-align: center;
+}
+.showcase-head h1 {
+  font-family: var(--font-display);
+  font-size: clamp(2.25rem, 5vw, 3.5rem);
+  font-weight: 700;
+  line-height: 1.05;
+  letter-spacing: -0.035em;
+}
+
+.showcase-lede {
+  margin-top: 0.6rem;
+  font-size: clamp(1.05rem, 2vw, 1.25rem);
+  color: color-mix(in srgb, var(--text) 65%, transparent);
+}
+
+.showcase-soon {
+  margin-top: 2rem;
+  text-align: center;
+}
+
+.carousel {
+  --item-w: clamp(240px, 56vw, 720px);
+  position: relative;
+  height: calc(var(--item-w) * 0.5625);
+  overflow: clip;
+  outline: none;
+  touch-action: pan-y;
+}
+/* Neighbours fade into the page at the edges. Two gradient overlays rather than a mask:
+ * Chromium redraws a mask over moving, fading photos unreliably, and the side photos
+ * would drop in and out. */
+.carousel::before,
+.carousel::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  z-index: 20;
+  width: 12%;
+  pointer-events: none;
+}
+.carousel::before { left: 0; background: linear-gradient(to right, var(--bg), transparent); }
+.carousel::after { right: 0; background: linear-gradient(to left, var(--bg), transparent); }
+
+/* Gallery: the photos are portrait, so the frames are too. */
+.carousel--portrait {
+  --item-w: clamp(200px, 34vw, 400px);
+  height: calc(var(--item-w) * 4 / 3);
+}
+.carousel--portrait .carousel-item { aspect-ratio: 3 / 4; }
+
+.carousel-item {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  width: var(--item-w);
+  aspect-ratio: 16 / 9;
+  border-radius: 18px;
+  overflow: hidden;
+  cursor: pointer;
+  transform: translateX(calc(-50% + var(--x, 0px))) scale(var(--s, 1));
+  opacity: var(--o, 1);
+  transition: transform var(--dur-base) var(--ease), opacity var(--dur-base) var(--ease);
+  user-select: none;
+}
+.carousel-item.is-active { cursor: default; }
+.carousel.is-instant .carousel-item { transition: none; }
+.carousel:focus-visible .carousel-item.is-active { box-shadow: 0 0 0 3px var(--bg), 0 0 0 5px var(--text); }
+.carousel-item img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  pointer-events: none;
+}
+.carousel-item video {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.video-controls {
+  position: absolute;
+  right: 12px;
+  bottom: 12px;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px;
+  border: 1px solid rgba(255, 255, 255, 0.65);
+  border-radius: 28px;
+  color: #fff;
+  background: rgba(20, 20, 20, 0.72);
+  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px);
+  transition: opacity var(--dur-fast) var(--ease);
+}
+.carousel-item:not(.is-active) .video-controls { opacity: 0; pointer-events: none; }
+.video-toggle,
+.video-fullscreen-toggle {
+  display: grid;
+  place-items: center;
+  flex: 0 0 40px;
+  width: 40px;
+  height: 40px;
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  border-radius: 50%;
+  color: #fff;
+  background: rgba(20, 20, 20, 0.38);
+  transition: transform var(--dur-fast) var(--ease), background-color var(--dur-fast) var(--ease);
+}
+.video-toggle:hover,
+.video-fullscreen-toggle:hover { background: rgba(20, 20, 20, 0.92); transform: scale(1.06); }
+.video-toggle:active,
+.video-fullscreen-toggle:active { transform: scale(0.94); }
+.video-toggle:focus-visible,
+.video-fullscreen-toggle:focus-visible,
+.video-speed:focus-visible { outline: 2px solid #fff; outline-offset: 3px; }
+.video-toggle svg { fill: currentColor; }
+.video-toggle .video-icon-pause,
+.video-toggle.is-playing .video-icon-play { display: none; }
+.video-toggle.is-playing .video-icon-pause { display: block; }
+.video-fullscreen-toggle svg { fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+.video-fullscreen-toggle .fullscreen-icon-exit,
+.video-fullscreen-toggle.is-fullscreen .fullscreen-icon-enter { display: none; }
+.video-fullscreen-toggle.is-fullscreen .fullscreen-icon-exit { display: block; }
+.video-speed {
+  width: 68px;
+  height: 38px;
+  padding: 0 0.35rem;
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  border-radius: 6px;
+  color: #fff;
+  background: rgba(20, 20, 20, 0.38);
+  font: inherit;
+  font-size: 0.82rem;
+  cursor: pointer;
+}
+.video-speed option { color: #111; background: #fff; }
+.carousel-item:fullscreen {
+  position: fixed;
+  inset: 0;
+  width: 100vw;
+  height: 100vh;
+  aspect-ratio: auto;
+  border-radius: 0;
+  background: #000;
+  opacity: 1;
+  transform: none;
+  cursor: default;
+}
+.carousel-item:fullscreen video { object-fit: contain; }
+.carousel-item:fullscreen .video-controls { opacity: 1; pointer-events: auto; }
+/* Stand-in crops; see the comments in walks.html and gallery.html. */
+.crop-ridge { object-position: 75% 20%; }
+.crop-canopy { object-position: 5% 40%; }
+.crop-loop { object-position: 50% 60%; }
+.crop-sky { object-position: 50% 0%; }
+.crop-river { object-position: 30% 100%; }
+.crop-peak { object-position: 50% 40%; }
+
+.carousel-caption {
+  margin-top: 2rem;
+  text-align: center;
+}
+.carousel-name {
+  font-size: clamp(1.4rem, 3vw, 1.75rem);
+  font-weight: 600;
+  letter-spacing: -0.025em;
+}
+.carousel-meta {
+  margin-top: 0.15rem;
+  color: color-mix(in srgb, var(--text) 60%, transparent);
+}
+
+.carousel-controls {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1.5rem;
+  margin-top: 1.5rem;
+}
+.carousel-arrow {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 48px;
+  height: 48px;
+  border: 1px solid var(--card-border);
+  border-radius: 50%;
+  transition: background-color var(--dur-fast) var(--ease), border-color var(--dur-fast) var(--ease), transform var(--dur-fast) var(--ease);
+}
+.carousel-arrow:hover { background: var(--card-bg-open); border-color: color-mix(in srgb, var(--text) 45%, transparent); }
+.carousel-arrow:active { transform: scale(0.94); }
+.carousel-arrow:disabled { opacity: 0.3; cursor: default; background: none; border-color: var(--card-border); transform: none; }
+.carousel-arrow:focus-visible { outline: 2px solid var(--text); outline-offset: 3px; }
+.carousel-arrow svg { fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+
+/* Dots: the current one stretches into a short pill. Each is a 24px target. */
+.carousel-dots { display: flex; gap: 2px; }
+.carousel-dot {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  transition: width var(--dur-base) var(--ease);
+}
+.carousel-dot::before {
+  content: "";
+  width: 8px;
+  height: 8px;
+  border-radius: 980px;
+  background: var(--text);
+  opacity: 0.25;
+  transition: width var(--dur-base) var(--ease), opacity var(--dur-base) var(--ease);
+}
+.carousel-dot[aria-current="true"] { width: 36px; }
+.carousel-dot[aria-current="true"]::before { width: 24px; opacity: 1; }
+.carousel-dot:hover::before { opacity: 0.6; }
+.carousel-dot[aria-current="true"]:hover::before { opacity: 1; }
+.carousel-dot:focus-visible { outline: 2px solid var(--text); outline-offset: 1px; border-radius: 6px; }
+
+/* ---------- Contact ---------- */
+/* The A2 "Say hello." page. Labels start inside each field and float up when you focus or
+ * type. That works because the label comes after its input in the markup and the input has
+ * placeholder=" ", so :placeholder-shown means "empty". */
+.contact {
+  width: min(42rem, 100%);
+  margin: 0 auto;
+  padding: 6rem 1.5rem 5rem;
+  text-align: center;
+}
+.contact h1 {
+  font-family: var(--font-display);
+  font-size: clamp(3rem, 8vw, 5rem);
+  font-weight: 700;
+  line-height: 1.02;
+  letter-spacing: -0.04em;
+}
+.contact-lede {
+  margin: 1rem auto 2.75rem;
+  max-width: 32rem;
+  font-size: clamp(1.05rem, 2vw, 1.25rem);
+  color: color-mix(in srgb, var(--text) 65%, transparent);
+  text-wrap: balance;
+}
+
+.contact-form {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+  text-align: left;
+}
+.field { position: relative; }
+.field--full,
+.form-error,
+.contact-form .btn-pill { grid-column: 1 / -1; }
+@media (max-width: 600px) {
+  .contact-form { grid-template-columns: 1fr; }
+}
+
+.field input,
+.field textarea {
+  display: block;
+  width: 100%;
+  padding: 1.55rem 1rem 0.55rem;
+  border: 1px solid var(--card-border);
+  border-radius: 12px;
+  background: var(--card-bg);
+  color: var(--text);
+  font: inherit;
+  transition: border-color var(--dur-fast) var(--ease), box-shadow var(--dur-fast) var(--ease);
+}
+.field textarea { min-height: 10rem; resize: vertical; }
+.field input:hover,
+.field textarea:hover { border-color: color-mix(in srgb, var(--text) 35%, transparent); }
+.field input:focus,
+.field textarea:focus {
+  outline: none;
+  border-color: var(--text);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--text) 15%, transparent);
+}
+
+.field label {
+  position: absolute;
+  top: 1.05rem;
+  left: 1rem;
+  color: color-mix(in srgb, var(--text) 55%, transparent);
+  pointer-events: none;
+  transform-origin: left top;
+  transition: transform var(--dur-fast) var(--ease), color var(--dur-fast) var(--ease);
+}
+.field input:focus + label,
+.field input:not(:placeholder-shown) + label,
+.field textarea:focus + label,
+.field textarea:not(:placeholder-shown) + label {
+  transform: translateY(-0.6rem) scale(0.78);
+}
+
+/* Errors only show after a send attempt (script.js adds .was-submitted). */
+.contact-form.was-submitted :is(input, textarea):invalid { border-color: var(--danger); }
+.form-error {
+  font-size: 0.9rem;
+  color: var(--danger);
+}
+
+.contact-form .btn-pill {
+  justify-self: center;
+  min-width: 10rem;
+  margin-top: 0.75rem;
+}
+
+.form-note {
+  grid-column: 1 / -1;
+  text-align: center;
+  font-size: 0.85rem;
+  color: color-mix(in srgb, var(--text) 50%, transparent);
+}
+
+.form-success {
+  font-size: clamp(1.15rem, 2.4vw, 1.4rem);
+  font-weight: 500;
+  outline: none;
+}
+
+/* ---------- Footer ---------- */
+/* Dark in both themes, on purpose, and slim: one row of logo, links and socials, then
+ * the copyright line. On the homepage it's slightly see-through so the photo glows
+ * through; elsewhere it's solid, because see-through over a plain white page is just grey.
+ *
+ * No backdrop-filter blur here. Chromium drops the blur from the snapshots it takes during
+ * the theme switch (so the glass "vanished" for the length of the ripple) and can draw a
+ * visible box at the blur's edge over the fixed homepage photo. At this darkness the blur
+ * added almost nothing anyway. */
+.site-footer {
+  flex-shrink: 0;
+  background: var(--footer-bg);
+  color: var(--footer-text);
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+.home-page .site-footer { background: rgba(15, 15, 15, 0.8); }
+
+.footer-inner {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+  align-items: center;
+  gap: 1rem;
+  max-width: 1180px;
+  margin: 0 auto;
+  padding: 0.75rem 1.5rem;
+}
+.footer-inner > a { justify-self: start; line-height: 0; }
+.footer-logo { height: 60px; width: auto; }
+
+.footer-nav ul {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 0 1.25rem; /* links are 44px tall already, so wrapped rows need no extra gap */
+}
+
+/* Social icons (outline style, filled detail via .fill) */
+.footer-social {
+  display: flex;
+  justify-self: end;
+  align-items: center;
+  gap: 0.75rem;
+}
+.footer-social a {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 50%;
+  opacity: 0.8;
+  transition: opacity var(--dur-fast) var(--ease), transform var(--dur-fast) var(--ease);
+}
+.footer-social a:hover,
+.footer-social a:focus-visible { opacity: 1; transform: translateY(-2px); }
+.footer-social svg {
+  width: 14px;
+  height: 14px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.8;
+  stroke-linejoin: round;
+}
+.footer-social svg .fill { fill: currentColor; stroke: none; }
+
+.footer-bottom {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: center;
+  gap: 0.5rem 1.5rem;
+  padding: 0.4rem 1.5rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  font-size: 0.75rem;
+  color: var(--footer-text-muted);
+}
+
+/* Back-to-top link */
+.back-to-top { transition: color var(--dur-fast) var(--ease); }
+.back-to-top:hover,
+.back-to-top:focus-visible { color: var(--footer-text); }
+
+/* Visible keyboard focus for footer links */
+.site-footer a:focus-visible { outline: 2px solid var(--footer-text); outline-offset: 3px; }
+
+/* ---------- Responsive ---------- */
+@media (max-width: 720px) {
+  .menu-toggle { display: flex; }
+
+  .home-content { padding: 4rem 1.25rem; }
+  .site-nav {
+    position: fixed;
+    top: 0;
+    right: 0;
+    height: 100vh;
+    width: min(78vw, 320px);
+    background: var(--nav-bg);
+    border-left: 1px solid var(--nav-border);
+    transform: translateX(100%);
+    transition: transform var(--dur-base) var(--ease), background-color var(--dur-base) var(--ease);
+    z-index: 200;
+    overflow-y: auto;
+    padding-top: 5.5rem;
+  }
+  .site-nav.is-open { transform: translateX(0); box-shadow: -12px 0 32px rgba(0, 0, 0, 0.25); }
+  .site-nav ul {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0;
+    padding: 0 1.75rem;
+    transform: none;
+  }
+  .site-nav a { display: block; padding: 0.9rem 0; width: 100%; }
+
+  .footer-inner {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+}
+
+/* ---------- Very small screens (400px and under) ---------- */
+/* Tighter nav, one size down on the big headlines, and a slimmer button, so nothing
+ * collides or overflows on the narrowest phones (the A2 brief asks for 320px). */
+@media (max-width: 400px) {
+  .nav-container { padding: 0.25rem 1rem; gap: 0.75rem; }
+  .nav-logo img { height: 48px; }
+  .nav-actions { gap: 0.5rem; }
+
+  .home-content { padding: 4rem 1rem; }
+  .home-content h1,
+  .about-hero h1,
+  .contact h1 { font-size: 2.5rem; }
+  .showcase-head h1,
+  .about-how-text h2,
+  .about-intro h2 { font-size: 2rem; }
+
+  .home-content .btn { padding: 0.8rem 1.4rem; font-size: 1rem; text-wrap: balance; }
+}
+
+/* ---------- Theme ripple ---------- */
+/* The new theme spreads out from the tree button like light, with a soft edge rather
+ * than a hard wipe. script.js sets the centre, the start radius (the button's own edge)
+ * and the end radius (the furthest corner), and adds .theme-rippling for the duration.
+ *
+ * The soft edge is a radial-gradient mask: a soft-edged disc in a square tile. The tile
+ * grows from just bigger than the button to big enough to cover the furthest corner, and
+ * moves so it stays centred on the button. Only mask-size and mask-position animate,
+ * which every browser with view transitions handles. (An earlier version animated a
+ * custom property inside the gradient; in some browsers that never moved, so the new
+ * theme stayed invisible and then popped in.)
+ *
+ * Transitions are off while it runs: the new page is live inside the circle, and colours
+ * fading in there as well would look like the theme changing twice. The one exception is
+ * the tree's leaves, which grow (or drop) as the ripple leaves the button. That's the
+ * toggle's whole point, and without it they'd just pop.
+ *
+ * Timing: it starts at the button's edge and moves fast straight away, so the click
+ * answers instantly; it eases off only as it reaches the far corners, where nothing is
+ * looking anyway. */
+.theme-rippling *,
+.theme-rippling *::before,
+.theme-rippling *::after { transition: none !important; }
+
+.theme-rippling .tree-icon .leaf {
+  transition-property: opacity, transform !important;
+  transition-duration: var(--dur-base), 0.5s !important;
+  transition-timing-function: var(--ease), cubic-bezier(0.34, 1.56, 0.64, 1) !important;
+}
+.theme-rippling .foliage .leaf:nth-child(1) { transition-delay: 0.06s !important; }
+.theme-rippling .foliage .leaf:nth-child(2) { transition-delay: 0.1s !important; }
+
+.theme-rippling::view-transition-old(root),
+.theme-rippling::view-transition-new(root) { animation: none; mix-blend-mode: normal; }
+.theme-rippling::view-transition-new(root) {
+  -webkit-mask-image: radial-gradient(closest-side, #000 75%, transparent);
+  mask-image: radial-gradient(closest-side, #000 75%, transparent);
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+  animation: theme-ripple 0.65s var(--ease-out) both;
+}
+
+@keyframes theme-ripple {
+  from {
+    -webkit-mask-size: var(--ripple-from) var(--ripple-from);
+    mask-size: var(--ripple-from) var(--ripple-from);
+    -webkit-mask-position: calc(var(--ripple-x) - var(--ripple-from) / 2) calc(var(--ripple-y) - var(--ripple-from) / 2);
+    mask-position: calc(var(--ripple-x) - var(--ripple-from) / 2) calc(var(--ripple-y) - var(--ripple-from) / 2);
+  }
+  to {
+    -webkit-mask-size: var(--ripple-to) var(--ripple-to);
+    mask-size: var(--ripple-to) var(--ripple-to);
+    -webkit-mask-position: calc(var(--ripple-x) - var(--ripple-to) / 2) calc(var(--ripple-y) - var(--ripple-to) / 2);
+    mask-position: calc(var(--ripple-x) - var(--ripple-to) / 2) calc(var(--ripple-y) - var(--ripple-to) / 2);
+  }
+}
+
+/* ---------- Reduced motion ---------- */
+/* For people who've asked their OS for less motion. The !important is a sledgehammer,
+ * but there are a lot of transitions above and it's the only tool that hits them all. */
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  * { transition-duration: 0.001ms !important; animation-duration: 0.001ms !important; }
+  .home-content > .home-eyebrow { animation: hero-in var(--dur-slow) var(--ease-out) both; }
+}
